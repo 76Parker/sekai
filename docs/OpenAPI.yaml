@@ -1,0 +1,286 @@
+openapi: 3.0.3
+info:
+  title: Sekai API
+  version: 0.1.0
+  description: |
+    API for uploading source code artifacts to security scans and listing user scans.
+
+    Authentication is controlled by the AUTH environment variable. When AUTH=false,
+    protected endpoints are available without a bearer token and use a local development user.
+servers:
+  - url: http://localhost:8080
+    description: Local development
+tags:
+  - name: Health
+  - name: Scans
+paths:
+  /healthz:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      operationId: getHealth
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+  /scans:
+    post:
+      tags:
+        - Scans
+      summary: Upload artifact and create scan
+      operationId: createScan
+      description: |
+        Uploads a zip archive with source code, creates a Scan, creates requested ScanChecks,
+        and decrements the user's scan quota if the scan is accepted.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Zip archive with source code.
+                enable_sast:
+                  type: boolean
+                  default: true
+                  description: Create a SAST ScanCheck.
+                labels:
+                  type: array
+                  maxItems: 3
+                  items:
+                    type: string
+                    maxLength: 10
+                  description: Optional scan labels. At most 3 labels are allowed.
+            encoding:
+              labels:
+                style: form
+                explode: true
+      responses:
+        "201":
+          description: Scan created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScanResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    get:
+      tags:
+        - Scans
+      summary: List current user's scans
+      operationId: listScans
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: User scans
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListScansResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Required when AUTH=true.
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/APIError"
+    Unauthorized:
+      description: Authentication required or token invalid
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/APIError"
+    Forbidden:
+      description: Operation is forbidden, for example scan quota exceeded
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/APIError"
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/APIError"
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          example: ok
+    ListScansResponse:
+      type: object
+      required:
+        - scans
+      properties:
+        scans:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScanResponse"
+    ScanResponse:
+      type: object
+      required:
+        - id
+        - owner_id
+        - status
+        - api_type
+        - artifact_metadata
+        - labels
+        - scan_checks
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 42
+        owner_id:
+          type: integer
+          format: int64
+          example: 1
+        status:
+          $ref: "#/components/schemas/ScanStatus"
+        api_type:
+          $ref: "#/components/schemas/APIType"
+        artifact_metadata:
+          $ref: "#/components/schemas/ArtifactMetadata"
+        labels:
+          type: array
+          maxItems: 3
+          items:
+            type: string
+            maxLength: 10
+          example:
+            - web
+            - prod
+        scan_checks:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScanCheck"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    ArtifactMetadata:
+      type: object
+      required:
+        - file_name
+        - target_language
+        - schema_version
+        - sloc
+        - uncompressed_size
+        - compressed_size
+      properties:
+        file_name:
+          type: string
+          example: source.zip
+        target_language:
+          type: string
+          example: go
+        schema_version:
+          type: integer
+          example: 1
+        sloc:
+          type: integer
+          example: 2450
+        uncompressed_size:
+          type: integer
+          format: int64
+          example: 1048576
+        compressed_size:
+          type: integer
+          format: int64
+          example: 262144
+    ScanCheck:
+      type: object
+      required:
+        - id
+        - type
+        - status
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 11
+        type:
+          $ref: "#/components/schemas/ScanCheckType"
+        status:
+          $ref: "#/components/schemas/ScanStatus"
+        started_at:
+          type: string
+          format: date-time
+          nullable: true
+        finished_at:
+          type: string
+          format: date-time
+          nullable: true
+    APIError:
+      type: object
+      required:
+        - status
+        - code
+        - message
+      properties:
+        status:
+          type: integer
+          example: 400
+        code:
+          type: string
+          example: BAD_REQUEST
+        message:
+          type: string
+          example: invalid request
+    ScanStatus:
+      type: string
+      enum:
+        - PENDING
+        - RUNNING
+        - COMPLETED
+        - FAILED
+        - CANCELLED
+    APIType:
+      type: string
+      enum:
+        - HTTP
+        - GRPC
+    ScanCheckType:
+      type: string
+      enum:
+        - SAST
+        - DAST
+        - SCA
+        - SECRETS

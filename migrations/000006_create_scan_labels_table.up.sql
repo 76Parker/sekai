@@ -1,0 +1,5 @@
+CREATE TABLE sekai.scan_labels (
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    scan_id BIGINT REFERENCES sekai.scans(id) ON DELETE CASCADE NOT NULL,
+    name TEXT NOT NULL
+);
