@@ -4,7 +4,8 @@ import (
 	"context"
 	"fmt"
 	"sekai/internal/entities/domain"
-	"strconv"
+
+	"github.com/google/uuid"
 )
 
 type ArtifactInspector interface {
@@ -15,6 +16,7 @@ type Service struct {
 	inspector ArtifactInspector
 	repo      Repository
 	storage   Storage
+	engine    Engine
 }
 
 func NewService(inspector ArtifactInspector, repo Repository, storage Storage) *Service {
@@ -65,6 +67,10 @@ func (s *Service) Create(ctx context.Context, cmd StartCommand) (domain.Scan, er
 	if err != nil {
 		return domain.Scan{}, err
 	}
+	key := buildArtifactStorageKey()
+	if err := s.engine.StartScan(ctx, createdScan, key); err != nil {
+		return domain.Scan{}, err
+	}
 
 	return createdScan, nil
 }
@@ -77,11 +83,8 @@ func (s *Service) ListByUser(ctx context.Context, userID int64) ([]domain.Scan, 
 	return s.repo.ListByOwnerID(ctx, userID)
 }
 
-func buildArtifactStorageKey(artifactID int64, fileName string) string {
-	key := "artifacts/" + fileName
-	s := strconv.FormatInt(artifactID, 10)
-	key = "artifacts/" + s + "/" + fileName
-	return key
+func buildArtifactStorageKey() string {
+	return uuid.New().String()
 }
 
 func createScanChecks(cmd StartCommand) ([]domain.ScanCheck, error) {

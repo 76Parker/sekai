@@ -15,3 +15,7 @@ type Storage interface {
 	Save(ctx context.Context, key string, artifact domain.Scan) error
 	DeleteByKey(ctx context.Context, key string) error
 }
+
+type Engine interface {
+	StartScan(ctx context.Context, scan domain.Scan, artifactKey string) error
+}

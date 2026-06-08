@@ -11,8 +11,9 @@ const (
 	ScanStatusPending   ScanStatus = iota // 0 - PENDING
 	ScanStatusRunning                     // 1 - RUNNING
 	ScanStatusCompleted                   // 2 - COMPLETED
-	ScanStatusFailed                      // 3 - FAILED
-	ScanStatusCancelled                   // 4 - CANCELLED
+	ScanStatusPartial                     // 4 - PARTIAL
+	ScanStatusFailed                      // 5 - FAILED
+	ScanStatusCancelled                   // 6 - CANCELLED
 )
 
 const (

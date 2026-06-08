@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:schemas:artifact_metadata:v1",
+  "title": "ArtifactMetadataV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "file_name",
+    "target_language",
+    "schema_version",
+    "sloc",
+    "uncompressed_size",
+    "compressed_size"
+  ],
+  "properties": {
+    "file_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "target_language": {
+      "type": "string",
+      "minLength": 1
+    },
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "sloc": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "uncompressed_size": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "compressed_size": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

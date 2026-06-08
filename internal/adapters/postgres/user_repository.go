@@ -29,11 +29,9 @@ func (r *UserRepository) GetOrCreateUserFromKeycloak(ctx context.Context, user a
 	RETURNING id, sub, username, role, scan_quota;
 	`
 
-	var (
-		role      sql.NullString
-		created   auth.User
-		roleValue any
-	)
+	var role sql.NullString
+	var created auth.User
+	var roleValue string
 
 	if len(user.Role) > 0 {
 		roleValue = strings.Join(user.Role, ",")

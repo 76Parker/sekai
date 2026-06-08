@@ -6,7 +6,6 @@ type ScanCheckType string
 
 var (
 	ScanCheckSAST    ScanCheckType = "SAST"
-	ScanCheckDAST    ScanCheckType = "DAST"
 	ScanCheckSCA     ScanCheckType = "SCA"
 	ScanCheckSecrets ScanCheckType = "SECRETS"
 )
@@ -48,7 +47,7 @@ func (c ScanCheck) FinishedAt() time.Time {
 func NewScanCheck(
 	checkType ScanCheckType,
 ) (ScanCheck, error) {
-	if checkType != ScanCheckSAST && checkType != ScanCheckDAST && checkType != ScanCheckSCA && checkType != ScanCheckSecrets {
+	if checkType != ScanCheckSAST && checkType != ScanCheckSCA && checkType != ScanCheckSecrets {
 		return ScanCheck{}, NewError("ScanCheck", "unknown checkType")
 	}
 

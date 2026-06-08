@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"sekai/internal/adapters/postgres/contracts"
+	"sekai/internal/contracts/metadataschema"
 	"sekai/internal/entities/domain"
 	scanusecase "sekai/internal/usecase/scan"
 	"time"
@@ -171,13 +171,13 @@ func (r *ScanRepository) create(ctx context.Context, scan domain.Scan) (domain.S
 	`
 
 	metadata := scan.Metadata()
-	metadataPayload, err := json.Marshal(contracts.ArtifactMetadataV1{
+	metadataPayload, err := json.Marshal(metadataschema.ArtifactMetadataV1{
 		FileName:         metadata.FileName(),
-		TargetLang:       metadata.TargetLang(),
+		TargetLanguage:   metadata.TargetLang(),
 		SchemaVersion:    metadata.SchemaVersion(),
-		SLOC:             metadata.SLOC(),
-		UncompressedSize: metadata.UncompressedSize(),
-		CompressedSize:   metadata.CompressedSize(),
+		Sloc:             metadata.SLOC(),
+		UncompressedSize: int(metadata.UncompressedSize()),
+		CompressedSize:   int(metadata.CompressedSize()),
 	})
 	if err != nil {
 		return domain.Scan{}, err
@@ -334,7 +334,7 @@ func (r *ScanRepository) listScanChecks(ctx context.Context, scanID int64) ([]do
 func parseArtifactMetadata(schemaVersion int, payload []byte) (domain.ArtifactMetadata, error) {
 	switch schemaVersion {
 	case 1:
-		var metadata contracts.ArtifactMetadataV1
+		var metadata metadataschema.ArtifactMetadataV1
 		if err := json.Unmarshal(payload, &metadata); err != nil {
 			return domain.ArtifactMetadata{}, err
 		}
@@ -344,11 +344,11 @@ func parseArtifactMetadata(schemaVersion int, payload []byte) (domain.ArtifactMe
 
 		return domain.ReconstituteArtifactMetadata(
 			metadata.FileName,
-			metadata.TargetLang,
+			metadata.TargetLanguage,
 			metadata.SchemaVersion,
-			metadata.SLOC,
-			metadata.UncompressedSize,
-			metadata.CompressedSize,
+			metadata.Sloc,
+			int64(metadata.UncompressedSize),
+			int64(metadata.CompressedSize),
 		), nil
 	default:
 		return domain.ArtifactMetadata{}, fmt.Errorf("unsupported artifact metadata schema version: %d", schemaVersion)

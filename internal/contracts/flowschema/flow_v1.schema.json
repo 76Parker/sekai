@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:schemas:flow:v1",
+  "title": "FlowV1",
+  "type": "array",
+  "items": {
+    "$ref": "#/$defs/code_flow"
+  },
+  "$defs": {
+    "code_flow": {
+      "title": "CodeFlowV1",
+      "type": "object",
+      "required": ["thread_flows"],
+      "additionalProperties": false,
+      "properties": {
+        "thread_flows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/thread_flow"
+          }
+        }
+      }
+    },
+    "thread_flow": {
+      "title": "ThreadFlowV1",
+      "type": "object",
+      "required": ["steps"],
+      "additionalProperties": false,
+      "properties": {
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/code_flow_step"
+          }
+        }
+      }
+    },
+    "code_flow_step": {
+      "title": "CodeFlowStepV1",
+      "type": "object",
+      "required": ["uri", "caller_function_id"],
+      "additionalProperties": false,
+      "properties": {
+        "uri": {
+          "type": "string"
+        },
+        "resolved_path": {
+          "type": "string"
+        },
+        "start_line": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "start_column": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "end_line": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "end_column": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "message": {
+          "type": "string"
+        },
+        "source_line": {
+          "type": "string"
+        },
+        "caller_function_id": {
+          "type": ["string", "null"]
+        }
+      }
+    }
+  }
+}
